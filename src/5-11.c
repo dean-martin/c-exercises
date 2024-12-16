@@ -4,6 +4,7 @@
 // there are no argumegnts.
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "common.c" // for _getline
 
 #define MAXLINE 1000
@@ -14,14 +15,25 @@ void tabstop(char *s, const int tabstop);
 void shift(char s[], int start, int amount);
 
 // detab: replaces tabs with the proper number of blanks to the next tabstop.
-int main(int argc, char **argv) {
-    int tbstop = TABSTOP;
+int main(int argc, char **argv) 
+{
     char line[MAXLINE];
     char line_buffer[BUFFERSIZE];
 
+    int c, tbstop = TABSTOP;
+
     while (--argc > 0 && (*++argv)[0] == '-') {
         int c;
-        // todo: says accept a "list" of tab stops, what?
+        while (c = *++argv[0])
+            switch (c) {
+                case 't':
+                    int n = 0;
+                    while (isdigit(c = *++(*argv))) {
+                        n = (n * 10) + c-'0';
+                    }
+                    tbstop = n;
+                break;
+            }
     }
 
     while(_getline(line, MAXLINE) > 0) {
@@ -35,7 +47,8 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void tabstop(char *s, const int ts) {
+void tabstop(char *s, const int ts) 
+{
     char c;
     int i;
     for (i = 0; (c = s[i]) != '\0'; i++) {
@@ -48,7 +61,8 @@ void tabstop(char *s, const int ts) {
     }
 }
 
-void shift(char s[], int start, int amount) {
+void shift(char s[], int start, int amount) 
+{
     char c, swap;
     
     for (int i = strlen(s); i > start; i--) {
