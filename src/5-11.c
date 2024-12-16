@@ -11,24 +11,28 @@
 #define TABSTOP 4
 #define BUFFERSIZE 5000
 
-void tabstop(char *s, const int tabstop);
+void detab(char *s, const int tabstop);
 void shift(char s[], int start, int amount);
+void entab(char s[]);
+void slice(char s[], int start, int stop);
 
+char line[MAXLINE];
+char line_buffer[BUFFERSIZE];
+
+// entab: replaces strings of blanks by the minimum number of tabs and blanks
+// to achieve the same spacing.
 // detab: replaces tabs with the proper number of blanks to the next tabstop.
 int main(int argc, char **argv) 
 {
-    char line[MAXLINE];
-    char line_buffer[BUFFERSIZE];
-
-    int c, tbstop = TABSTOP;
+    int c, tabstop = TABSTOP;
 
     while (--argc > 0 && (*++argv)[0] == '-') {
-        int c;
-        while (c = *++argv[0])
+		int c;
+		while ((c = *++argv[0]))
             switch (c) {
                 case 't':
                     int n = 0;
-                    while (isdigit(c = *++(*argv))) {
+                    while (isdigit(c = *++argv[0])) {
                         n = (n * 10) + c-'0';
                     }
                     tbstop = n;
@@ -37,17 +41,52 @@ int main(int argc, char **argv)
     }
 
     while(_getline(line, MAXLINE) > 0) {
-        // todo: fix tbstop-1 to just tbstop
-        tabstop(line, tbstop-1);
-        strcat(line_buffer, line);
-    }
+		// todo: fix tbstop-1 to just tbstop
+		detab(line, tabstop-1);
+		// entab(line);
+		strcat(line_buffer, line);
+	}
 
     printf("%s", line_buffer);
 
     return 0;
 }
 
-void tabstop(char *s, const int ts) 
+void entab(char s[])
+{
+		int i, blank_start = 0, blank_count = 0;
+		char c, prev;
+		for(i = 0; (c = s[i]) != '\0'; i++) {
+				if (c == ' ') {
+						blank_count++; 
+						if (prev != ' ')
+								blank_start = i;
+				} 
+				else 
+						blank_count = 0;
+
+				if (blank_count == TABSTOP) {
+						slice(s, blank_start, i);
+						s[blank_start] = '\t';
+						blank_count = 0;
+						i = blank_start;
+						prev = s[i];
+				}
+				else
+						prev = c;
+		}
+}
+
+void slice(char s[], int start, int end) {
+		char c;
+		int i = start;
+		int shift = end - start;
+		for(; (c = s[i]) != '\0'; i++) {
+				s[i] = s[i + shift];
+		}
+}
+
+void detab(char *s, const int ts) 
 {
     char c;
     int i;
