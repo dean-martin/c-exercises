@@ -10,10 +10,12 @@
 #define MAXLINE 1000
 #define TABSTOP 4
 #define BUFFERSIZE 5000
+#define ENTAB 0
+#define DETAB 1
 
 void detab(char *s, const int tabstop);
 void shift(char s[], int start, int amount);
-void entab(char s[]);
+void entab(char s[], const int tabstop);
 void slice(char s[], int start, int stop);
 
 char line[MAXLINE];
@@ -24,26 +26,38 @@ char line_buffer[BUFFERSIZE];
 // detab: replaces tabs with the proper number of blanks to the next tabstop.
 int main(int argc, char **argv) 
 {
+    int runtype = ENTAB;
     int c, tabstop = TABSTOP;
 
     while (--argc > 0 && (*++argv)[0] == '-') {
 		int c;
 		while ((c = *++argv[0]))
             switch (c) {
+                case 'e':
+                    runtype = ENTAB;
+                    break;
+                case 'd':
+                    runtype = DETAB;
+                    break;
                 case 't':
                     int n = 0;
                     while (isdigit(c = *++argv[0])) {
                         n = (n * 10) + c-'0';
                     }
-                    tbstop = n;
+                    tabstop = n;
                 break;
             }
     }
 
     while(_getline(line, MAXLINE) > 0) {
-		// todo: fix tbstop-1 to just tbstop
-		detab(line, tabstop-1);
-		// entab(line);
+        switch (runtype) {
+            case ENTAB:
+                entab(line, tabstop-1);
+            break;
+            case DETAB:
+                detab(line, tabstop-1); 
+            break;
+        }
 		strcat(line_buffer, line);
 	}
 
@@ -52,7 +66,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void entab(char s[])
+void entab(char s[], const int tabstop)
 {
 		int i, blank_start = 0, blank_count = 0;
 		char c, prev;
@@ -65,7 +79,7 @@ void entab(char s[])
 				else 
 						blank_count = 0;
 
-				if (blank_count == TABSTOP) {
+				if (blank_count == tabstop) {
 						slice(s, blank_start, i);
 						s[blank_start] = '\t';
 						blank_count = 0;
@@ -94,7 +108,7 @@ void detab(char *s, const int ts)
         if (c == '\t') {
             shift(s, i, ts);
             for(int j = i; j <= i + ts; j++) {
-                s[j] = 't';
+                s[j] = ' ';
             }
         }
     }
