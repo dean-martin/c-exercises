@@ -15,6 +15,22 @@ void _qsort(void *lineptr[], int left, int right,
            int (*comp)(void *, void *));
 int numcmp(char *, char *);
 
+// this is so whack i love it
+int (*torevcmp)(void *, void *) = NULL;
+int revcmp(void * a, void * b)
+{
+    if (torevcmp == NULL)
+        return 0; // nop
+
+    // do the opposite
+    int res = torevcmp(a, b);
+    if (res > 0)
+        return -1;
+    if (res < 0)
+        return 1;
+    return 0;
+}
+
 /* sort input lines */
 int main(int argc, char *argv[])
 {
@@ -35,10 +51,17 @@ int main(int argc, char *argv[])
                 break;
             }
     }
+    printf("numeric: %d\n", numeric);
+    printf("reverse: %d\n", reverse);
 
     if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
+        int (*cmp)(void *, void *) = (int (*)(void*,void*))(numeric ? numcmp : strcmp);
+        if (reverse) {
+            torevcmp = cmp;
+            cmp = revcmp;
+        }
         _qsort((void **) lineptr, 0, nlines-1,
-              (int (*)(void*,void*))(numeric ? numcmp : strcmp));
+              cmp);
         writelines(lineptr, nlines);
         return 0;
     } else {
