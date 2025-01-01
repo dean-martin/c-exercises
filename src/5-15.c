@@ -1,6 +1,7 @@
-// Exercise 5-14.
-// Modify the sort program to handle a -r flag, which indicates
-// sorting in reverse (decreasing) order. Be sure that -r works with -n.
+// Exercise 5-15.
+// Add the option -f to fold upper and lower case together, so that
+// case distrinctions are not made during sorting; for example, a and A compare
+// equal.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -31,6 +32,16 @@ int revcmp(void * a, void * b)
     if (res < 0)
         return 1;
     return 0;
+}
+
+int ignorecase = 0;
+
+int _strcmp(char *a, char *b)
+{
+    if (ignorecase) {
+
+    }
+    return strcmp(a, b);
 }
 
 /* sort input lines */
