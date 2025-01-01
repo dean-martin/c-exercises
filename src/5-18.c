@@ -1,8 +1,23 @@
 // Exercise 5-18.
 // Make dcl recover from input errors.
+/*
+dcl examples:
+char **argv
+    argv: pointer to pointer to char
+int (*daytab)[13]
+    daytab: pointer to array[13] of int
+int *daytab[13]
+    daytab: array[13] of pointer to int
+void *comp()
+    comp: function returning pointer to void
+void (*comp)()
+    comp: pointer to function returning void
+. . .
+*/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "common.c"
 
 #define MAXTOKEN 100
 
@@ -23,7 +38,7 @@ int main() /* convert declaration to words */
     while (gettoken() != EOF) { /* 1st token on line */
        strcpy(datatype, token);
        out[0] = '\0';
-       dcl();
+       dcl(); /* parse rest of line */
        if (tokentype != '\n')
            printf("syntax error\n");
        printf("%s: %s %s\n", name, out, datatype);
@@ -54,6 +69,41 @@ int undcl_main()
     return 0;
 }
 
+/* dcl: parse a declarator */
+void dcl(void)
+{
+    int ns;
+
+    for (ns = 0; gettoken() == '*'; )
+        ns++;
+    dirdcl();
+    while (ns-- > 0)
+        strcat(out, " pointer to");
+}
+
+/* dirdcl: parse a direct declarator */
+void dirdcl(void)
+{
+    int type;
+
+    if (tokentype == '(') {  /* ( dcl ) */
+        dcl();
+        if (tokentype != ')')
+            printf("error: missing )\n");
+    } else if (tokentype == NAME)  /* variable name */
+        strcpy(name, token);
+    else
+        printf("error: expected name or (dcl)\n");
+    while ((type=gettoken()) == PARENS || type == BRACKETS)
+        if (type == PARENS)
+            strcat(out, " function returning");
+        else {
+            strcat(out, " array");
+            strcat(out, token);
+            strcat(out, " of");
+        }
+}
+
 int gettoken(void) /* return next token */
 {
     int c, getch(void);
@@ -74,8 +124,14 @@ int gettoken(void) /* return next token */
         for (*p++ = c; (*p++ = getch()) != ']'; )
             ;
         *p = '\0';
+        return tokentype = BRACKETS;
+    } else if (isalpha(c)) {
+        for (*p++ = c; isalnum(c = getch()); )
+            *p++ = c;
+        *p = '\0';
         ungetch(c);
         return tokentype = NAME;
-    } else
+    }
+    else
         return tokentype = c;
 }

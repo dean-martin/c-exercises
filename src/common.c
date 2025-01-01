@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #define ALLOCSIZE 10000 /* size of available space */
 
 static char allocbuf[ALLOCSIZE];    /* storage for alloc */
@@ -26,4 +28,23 @@ int _getline(char *s, int lim)
         *s++ = c;
     *s == '\0';
     return s - start;
+}
+
+
+#define BUFSIZE 100
+
+char buf[BUFSIZE];  /* buffer for ungetch */
+int bufp = 0;
+
+int getch(void) /* get a (possibly pushed back) character */
+{
+    return (bufp > 0) ? buf[--bufp] : getchar();
+}
+
+void ungetch(int c) /* push character back on input */
+{
+    if (bufp >= BUFSIZE)
+        printf("ungetch: too many characters\n");
+    else
+        buf[bufp++] = c;
 }
