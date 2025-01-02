@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
+#include "common.c"
 
 struct tnode {
     char *word;
@@ -14,27 +16,77 @@ struct tnode {
     struct tnode *right;
 };
 
+struct pnode {
+    char *prefix;
+    char *words[25];
+    int buf;
+    struct pnode *left;
+    struct pnode *right;
+};
+
 #define MAXWORD 100
+
+struct tnode *talloc(void);
 struct tnode *addtree(struct tnode *, char *);
+char *strdup(const char *);
+
 void treeprint(struct tnode *);
 int getword(char *, int);
+
+unsigned int n = 5;
+
+struct pnode *_addtree(struct pnode *p, char *w)
+{
+    int cond;
+
+    if (p == NULL) {
+        p = (struct pnode *) malloc(sizeof(struct pnode));
+        p->prefix = strndup(w, n);
+        p->words[p->buf++] = strdup(w);
+        p->left = p->right = NULL;
+        return p;
+    } else if ((cond = strncmp(w, p->prefix, n)) == 0) {
+        p->words[p->buf++] = strdup(w);
+    } else if (cond < 0)
+        p->left = _addtree(p->left, w);
+    else
+        p->right = _addtree(p->right, w);
+
+    return p;
+}
+
+void _treeprint(struct pnode *p)
+{
+    if (p != NULL) {
+        _treeprint(p->left);
+        printf("[%s] ", p->prefix);
+        char **w = p->words;
+        while (*w) {
+            printf("%s ", *w++);
+        }
+        printf("\n");
+        _treeprint(p->right);
+    }
+}
 
 /* word frequency count */
 int main()
 {
-    struct tnode *root;
+    struct pnode *root;
     char word[MAXWORD];
 
     root = NULL;
     while (getword(word, MAXWORD) != EOF)
-        if (isalpha(word[0]))
-            root = addtree(root, word);
-    treeprint(root);
+        if (isalpha(word[0]) && strlen(word) >= n)
+            root = _addtree(root, word);
+    // TODO: ignore comment & string words.
+    // TODO: make prefix size cmdline parameter.
+    // I thought I had to sort the tree to print it alphabetically,
+    // but the recursive descent does that by nature. Excellent.
+    _treeprint(root);
+
     return 0;
 }
-
-struct tnode *talloc(void);
-char *strdup(const char *);
 
 /* addtree: add a node with w, at or below p */
 struct tnode *addtree(struct tnode *p, char *w)
