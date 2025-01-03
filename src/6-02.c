@@ -36,6 +36,10 @@ int main(int argc, char *argv[])
             switch (c) {
                 case 'n': {
                     int nn = 0;
+                    while (isspace(c = *++argv[0]))
+                        ;
+                    if (isdigit(c))
+                        argv[0]--;
                     while (isdigit(c = *++argv[0]))
                         nn = (nn * 10) + (c-'0');
                     n = nn;
