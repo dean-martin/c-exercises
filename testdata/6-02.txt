@@ -1,6 +1,12 @@
 horseshoe horsecrab
 horsearound
 foobar applesauce
-applejuice
+"appleignoredword" applejuice
+horseofcourse "horseinastring"
+horseshouldappear // this horsewordthing should be ignored
+"horseanotherinstring" /* this horsemandudebro should be ignored */
 hello
+/*
+thisisareallycoolword
+*/
 foobaz

@@ -9,38 +9,57 @@
 #include <stdlib.h>
 #include "common.c"
 
-struct tnode {
-    char *word;
-    int count;
-    struct tnode *left;
-    struct tnode *right;
-};
+#define MAXWORD 100
 
-struct pnode {
+struct tnode {
     char *prefix;
     char *words[25];
     int buf;
-    struct pnode *left;
-    struct pnode *right;
+    struct tnode *left;
+    struct tnode *right;
 };
-
-#define MAXWORD 100
-
 struct tnode *talloc(void);
 struct tnode *addtree(struct tnode *, char *);
-char *strdup(const char *);
-
 void treeprint(struct tnode *);
+
+char *strdup(const char *);
 int getword(char *, int);
 
 unsigned int n = 5;
 
-struct pnode *_addtree(struct pnode *p, char *w)
+/* word frequency count */
+int main(int argc, char *argv[])
+{
+    while (--argc > 0 && (*++argv)[0] == '-') {
+        int c;
+        while ((c = *++argv[0]))
+            switch (c) {
+                case 'n': {
+                    int nn = 0;
+                    while (isdigit(c = *++argv[0]))
+                        nn = (nn * 10) + (c-'0');
+                    n = nn;
+                } break;
+            }
+    }
+
+    struct tnode *root = NULL;
+    char word[MAXWORD];
+
+    while (getword(word, MAXWORD) != EOF)
+        if (isalpha(word[0]) && strlen(word) >= n)
+            root = addtree(root, word);
+    treeprint(root);
+
+    return 0;
+}
+
+struct tnode *addtree(struct tnode *p, char *w)
 {
     int cond;
 
     if (p == NULL) {
-        p = (struct pnode *) malloc(sizeof(struct pnode));
+        p = talloc();
         p->prefix = strndup(w, n);
         p->words[p->buf++] = strdup(w);
         p->left = p->right = NULL;
@@ -48,76 +67,26 @@ struct pnode *_addtree(struct pnode *p, char *w)
     } else if ((cond = strncmp(w, p->prefix, n)) == 0) {
         p->words[p->buf++] = strdup(w);
     } else if (cond < 0)
-        p->left = _addtree(p->left, w);
+        p->left = addtree(p->left, w);
     else
-        p->right = _addtree(p->right, w);
+        p->right = addtree(p->right, w);
 
     return p;
 }
 
-void _treeprint(struct pnode *p)
+void treeprint(struct tnode *p)
 {
     if (p != NULL) {
-        _treeprint(p->left);
+        treeprint(p->left);
         printf("[%s] ", p->prefix);
         char **w = p->words;
         while (*w) {
             printf("%s ", *w++);
         }
         printf("\n");
-        _treeprint(p->right);
-    }
-}
-
-/* word frequency count */
-int main()
-{
-    struct pnode *root;
-    char word[MAXWORD];
-
-    root = NULL;
-    while (getword(word, MAXWORD) != EOF)
-        if (isalpha(word[0]) && strlen(word) >= n)
-            root = _addtree(root, word);
-    // TODO: ignore comment & string words.
-    // TODO: make prefix size cmdline parameter.
-    // I thought I had to sort the tree to print it alphabetically,
-    // but the recursive descent does that by nature. Excellent.
-    _treeprint(root);
-
-    return 0;
-}
-
-/* addtree: add a node with w, at or below p */
-struct tnode *addtree(struct tnode *p, char *w)
-{
-    int cond;
-
-    if (p == NULL) {
-        p = talloc();
-        p->word = strdup(w);
-        p->count = 1;
-        p->left = p->right = NULL;
-    } else if ((cond = strcmp(w, p->word)) == 0)
-        p->count++;
-    else if (cond < 0)
-        p->left = addtree(p->left, w);
-    else
-        p->right = addtree(p->right, w);
-    return p;
-}
-
-/* treeprint: in-order print of tree p */
-void treeprint(struct tnode *p)
-{
-    if (p != NULL) {
-        treeprint(p->left);
-        printf("%4d %s\n", p->count, p->word);
         treeprint(p->right);
     }
 }
-
-#include <stdlib.h>
 
 /* talloc: make a tnode */
 struct tnode *talloc(void)
@@ -147,14 +116,36 @@ int getword(char *word, int lim)
     if (c != EOF)
         *w++ = c;
     if (!isalpha(c)) {
+
+        if (c == '"') // skip string words
+            while ((c = getch()) != '"' || c == EOF)
+                ;
+
+        if (c == '/') {
+            c = getch();
+            if (c == '*') { // inside a multi-line comment
+                int prev = c;
+                while (!(c == '/' && prev == '*') || c == EOF)
+                    prev = c, c = getch();
+            } else if (c == '/') { // on a java style comment, skip to \n
+                // advance until \n or EOF
+                while ((c = getch()) != '\n' || c == EOF)
+                    ;
+            } else {
+                ungetch(c);
+            }
+        }
+
         *w = '\0';
         return c;
     }
-    for ( ; --lim > 0; w++)
+
+    for ( ; --lim > 0; w++) {
         if (!isalnum(*w = getch())) {
             ungetch(*w);
             break;
         }
+    }
     *w = '\0';
     return word[0];
 }
