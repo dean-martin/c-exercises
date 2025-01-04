@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 struct nlist {          /* table entry: */
     struct nlist *next; /* next entry in chain */
@@ -31,11 +32,7 @@ int main()
     undef("deez");
 
     struct nlist *node = lookup("deez");
-    if (node) {
-        printf("still alive!\n");
-    } else {
-        printf("deleted!\n");
-    }
+    assert(node == NULL);
 }
 
 /* hash: form hash value for string s */
