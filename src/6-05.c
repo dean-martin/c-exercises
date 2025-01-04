@@ -14,6 +14,7 @@ struct nlist {          /* table entry: */
 
 #define HASHSIZE 101
 
+unsigned hash(char *);
 struct nlist *lookup(char *s);
 struct nlist *install(char *, char *);
 void undef(char *);
@@ -22,17 +23,14 @@ static struct nlist *hashtab[HASHSIZE]; /* pointer table */
 
 int main()
 {
-    struct nlist *node = install("deez", "nutz");
-    if (node == NULL) {
+    if (install("deez", "nutz") == NULL) {
         printf("node not allocated\n");
         return -1;
     }
 
-    node = lookup("deez");
-    printf("%s: %s\n", node->name, node->defn);
-
     undef("deez");
-    node = lookup("deez");
+
+    struct nlist *node = lookup("deez");
     if (node) {
         printf("still alive!\n");
     } else {
@@ -86,27 +84,26 @@ struct nlist *install(char *name, char *defn)
 
 void undef(char *name)
 {
-    struct nlist *np;
-    struct nlist *prev;
+    struct nlist *np, *prev = NULL;
     unsigned hashval;
+    prev = NULL; // THIS WAS CAUSING THE SEGFAULT XD
+    // it's an auto variable, so it's filled with garbage, and somehow weirdness was happening?
 
     hashval = hash(name);
 
-    // I got this correct, but the book organized the code way cleaner, going to change to.
-    // also, my free(np); is segfaulting and I don't know why.
-    for (np = hashtab[hashval]; np != NULL; prev = np, np = np->next)
-        if (strcmp(name, np->name) == 0) {
-            if (np && np->next) {
-                if (prev == NULL) {
-                    hashtab[hashval] = np->next; // first on the list, put np->next on top
-                } else {
-                    prev->next = np->next; // somewhere in middle, patch list
-                }
-            }
-            free((void *)np->name);
-            free((void *)np->defn);
-            // segfaulting below, why?
-            free((void *)np);
-            return;
+    for (np = hashtab[hashval]; np != NULL; np = np->next) {
+        if (strcmp(name, np->name) == 0)
+            break;
+        prev = np;
+    }
+    if (np != NULL) {
+        if (prev == NULL) {
+            hashtab[hashval] = np->next; // first on the list, put np->next on top
+        } else {
+            prev->next = np->next; // somewhere in middle, patch list
         }
+        free((void *) np->name);
+        free((void *) np->defn);
+        free((void *) np);
+    }
 }
