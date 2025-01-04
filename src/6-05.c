@@ -84,10 +84,12 @@ struct nlist *install(char *name, char *defn)
 
 void undef(char *name)
 {
-    struct nlist *np, *prev = NULL;
+    struct nlist *np, *prev;
     unsigned hashval;
-    prev = NULL; // THIS WAS CAUSING THE SEGFAULT XD
-    // it's an auto variable, so it's filled with garbage, and somehow weirdness was happening?
+    prev = NULL; // this missing caused a segfault, what the fuck.
+    // it's an auto variable, so it's filled with garbage (memory on the stack),
+    // and then later on, i set prev->next = np->next, and it explodes.
+    // lol
 
     hashval = hash(name);
 
