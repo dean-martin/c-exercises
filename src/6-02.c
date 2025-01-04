@@ -11,13 +11,15 @@
 
 #define MAXWORD 100
 
-struct tnode {
+typedef struct tnode *Treeptr;
+
+typedef struct tnode {
     char *prefix;
     char *words[25];
     int buf;
     struct tnode *left;
     struct tnode *right;
-};
+} Treenode;
 struct tnode *talloc(void);
 struct tnode *addtree(struct tnode *, char *);
 void treeprint(struct tnode *);
@@ -93,9 +95,9 @@ void treeprint(struct tnode *p)
 }
 
 /* talloc: make a tnode */
-struct tnode *talloc(void)
+Treeptr talloc(void)
 {
-    return (struct tnode *) malloc(sizeof(struct tnode));
+    return (Treeptr) malloc(sizeof(Treenode));
 }
 
 char *strdup(const char *s)    /* make a duplicate of s */
