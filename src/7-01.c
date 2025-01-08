@@ -10,6 +10,8 @@ int main(int argc, char *argv[])
 {
     int c;
 
+    //printf("(int *) c: %p\n", &c);
+
     if (strstr(argv[0], "toupper"))
         while ((c = getchar()) != EOF)
             putchar(toupper(c));

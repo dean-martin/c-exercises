@@ -1,0 +1,12 @@
+# EditorConfig is awesome: https://editorconfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*.c]
+indent_style = tab
+indent_size = 8
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_style = tab
