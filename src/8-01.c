@@ -13,14 +13,6 @@ int getchar(void);
 
 int main(int argc, char *argv[])
 {
-	/*
-	char c;
-	read(0, &c, 1); // read 1 char from fd 0 (stdin)
-	write(1, &c, 1);
-	c = '\n';
-	write(1, &c, 1);
-	*/
-
 	// simple cat prog
 	char c;
 
@@ -34,5 +26,6 @@ int getchar(void)
 {
 	char c;
 
+	// casting to unsigned exlimnates any problem of sign extension.
 	return (read(0, &c, 1) == 1) ? (unsigned char) c : EOF;
 }
