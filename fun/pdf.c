@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
 	char *text = (char *) malloc(sizeof(char[10000]));
 
 	int c = 0, prev = 0;
-	#define TEXTBLOCK 1
-	#define TEXT 2
+#define TEXTBLOCK 1
+#define TEXT 2
 	unsigned long state = 0;
 
 	for (; (c = getc(fp)) != EOF; prev = c) {
@@ -35,19 +35,21 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		if ((state & TEXTBLOCK) && c == '(') {
+		if (c == '(') {
 			state |= TEXT;
 		}
 		if (state & TEXT) {
 			if (c == ')') {
 				state &= ~TEXT;
+				printf("off\n");
 				continue;
 			}
-			if (strlen(text) > 100)
+			if (strlen(text) > 500)
 				break;
-			if (isalpha(c) || isspace(c))
+			if (isalpha(c) || isspace(c)) {
 				printf("%c", c);
-			*text++ = c;
+				*text++ = c;
+			}
 		}
 	}
 
